@@ -1,0 +1,22 @@
+[
+  {"query":"Siapa penanggung jawab pembicara pada rapat ke-4?","contains":["Meydina"],"meetings":[4]},
+  {"query":"Siapa penanggung jawab medpart pada rapat ke-4?","contains":["Zida","Eni"],"meetings":[4]},
+  {"query":"Apa kendala divisi ATP pada rapat ke-2?","contains":["Tidak ada"],"only_division":"ATP","meetings":[2]},
+  {"query":"Apa vendor cocard dan lanyard pada rapat ke-2?","contains":["Lanyard Custom PWT"],"meetings":[2]},
+  {"query":"Apa vendor proyektor dan HT pada rapat ke-2?","contains":["Djava Rental"],"meetings":[2]},
+  {"query":"Kapan rapat ke-4 dilaksanakan?","contains":["07 Oktober 2026"],"meetings":[4]},
+  {"query":"Kapan rapat ke-1 dilaksanakan?","contains":["20 Mei 2026"],"meetings":[1]},
+  {"query":"Apa progress Sekbend pada rapat ke-4?","contains":["surat peminjaman fapet"],"only_division":"Sekbend","meetings":[4]},
+  {"query":"Berapa harga rice box konsumsi pada rapat ke-4?","contains":["Jasmin Catering","Rp15.000"],"meetings":[4]},
+  {"query":"Apa perkembangan sponsor terbaru?","contains":["sponsor"],"only_meeting":4},
+  {"query":"Bandingkan perkembangan sponsorship pada semua rapat.","contains":["sponsor"],"meetings":[1,2,3,4]},
+  {"query":"Apa rencana divisi Usdan pada rapat ke-4?","contains":["open PO merch"],"only_division":"Usdan","meetings":[4]},
+  {"query":"Siapa presiden Indonesia?","no_evidence":true},
+  {"query":"Berapa harga bitcoin hari ini?","no_evidence":true},
+  {"query":"Apa resep nasi goreng?","no_evidence":true},
+  {"query":"Apa pembahasan sponsor pada rapat ke-9?","no_evidence":true},
+  {"query":"Apa perkembangan sponsor tahun 2025?","no_evidence":true},
+  {"query":"Siapa yang akan menjadi juri?","contains":["pak ihsan","pak irham","pak Axl"],"only_meeting":4},
+  {"query":"Siapa yang menjadi juri pada rapat ke-1?","contains":["Juri"],"only_meeting":1},
+  {"query":"Siapa saja juri pada semua rapat?","contains":["Juri"],"meetings":[1,2,3,4]}
+]

@@ -1,15 +1,23 @@
-from sqlalchemy import String, Integer, Text
-from sqlalchemy.orm import Mapped, mapped_column
-from pgvector.sqlalchemy import VECTOR
-from database import Base
+from typing import Literal
 
-class DokumenArsip(Base):
-    __tablename__ = "dokumen_arsip"
-    
-    id: Mapped[int] = mapped_column(primary_key=True)
-    nama_file: Mapped[str] = mapped_column(String(255))
-    divisi: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    tahun: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    page_num: Mapped[int | None] = mapped_column(Integer, nullable=True, default=1)
-    konten_teks: Mapped[str] = mapped_column(Text)
-    embedding: Mapped[list] = mapped_column(VECTOR(384))
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=4000)
+
+
+class PertanyaanRequest(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    pertanyaan: str = Field(min_length=3, max_length=2000)
+    divisi: str | None = Field(default=None, max_length=100)
+    tahun: int | None = Field(default=None, ge=2000, le=2100)
+    document_id: int | None = Field(default=None, ge=1)
+    history: list[ChatMessage] = Field(default_factory=list, max_length=20)
+    top_k: int = Field(default=8, ge=1, le=12)
+
+    @field_validator("history", mode="before")
+    @classmethod
+    def optional_history(cls, value):
+        return value or []

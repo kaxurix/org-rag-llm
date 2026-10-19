@@ -1,6 +1,35 @@
-version: '3.8'
 services:
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      DATA_DIR: /app/data
+      DATASET_DIR: /app/datasets
+      ANSWER_MODE: ${ANSWER_MODE:-auto}
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash-lite}
+      GEMINI_TIMEOUT_SECONDS: ${GEMINI_TIMEOUT_SECONDS:-40}
+      GEMINI_MAX_TOKENS: ${GEMINI_MAX_TOKENS:-2048}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5-coder:7b}
+      API_KEY: ${API_KEY:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - archive_data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Preserved for access to the old prototype database. The new app uses SQLite.
   db:
+    profiles: ["legacy-postgres"]
     image: ankane/pgvector:latest
     environment:
       POSTGRES_USER: admin
@@ -12,4 +41,5 @@ services:
       - pgdata:/var/lib/postgresql/data
 
 volumes:
+  archive_data:
   pgdata:

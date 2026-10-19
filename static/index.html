@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#164e43">
+  <title>CampusOrg — Arsip S-TECH 2026</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#question">Langsung ke pertanyaan</a>
+  <aside class="sidebar">
+    <a href="/" class="brand"><span class="brand-mark" aria-hidden="true">C.</span><span>CampusOrg<small>KNOWLEDGE WORKSPACE</small></span></a>
+    <div class="workspace-label">ARSIP ORGANISASI <span>2026</span></div>
+    <h1>Soedirman<br>Technophoria<span class="dot">.</span></h1>
+    <p class="subtle">Dari catatan rapat menjadi<br>pengetahuan bersama.</p>
+    <div class="sidebar-divider"></div>
+    <div class="section-label">KOLEKSI NOTULEN <span id="document-count">0</span></div>
+    <div id="documents" aria-label="Daftar dokumen"></div>
+    <button id="upload-toggle" class="upload-toggle" type="button" aria-expanded="false" aria-controls="upload-panel">＋ Tambahkan PDF</button>
+    <form id="upload-panel" hidden>
+      <label for="files">Dokumen PDF <span id="upload-limit"></span></label>
+      <input id="files" name="files" type="file" accept=".pdf,application/pdf" multiple required>
+      <label for="upload-division">Kategori dokumen</label>
+      <input id="upload-division" value="Umum" maxlength="100" required>
+      <label for="upload-year">Tahun</label>
+      <input id="upload-year" type="number" min="2000" max="2100" value="2026" required>
+      <button class="primary" type="submit">Impor dokumen</button>
+      <p id="upload-result" role="status"></p>
+    </form>
+    <div class="sidebar-bottom">
+      <div id="service-status" class="service-status" role="status">Memeriksa layanan…</div>
+      <details><summary>Koneksi terlindungi</summary><label for="api-key">API key (jika diaktifkan)</label><input type="password" id="api-key" autocomplete="off" placeholder="Masukkan API key"><button type="button" id="save-key">Gunakan key</button></details>
+      <small>Arsip lokal · Sumber dapat diperiksa</small>
+    </div>
+  </aside>
+  <main>
+    <header class="topbar"><span>WORKSPACE <span class="slash">/</span> Asisten arsip</span><span class="year-badge">S-TECH 2026</span></header>
+    <div class="content">
+      <section class="intro" aria-labelledby="intro-title">
+        <div class="eyebrow"><span aria-hidden="true">✦</span> PENGETAHUAN YANG BISA DITELUSURI</div>
+        <h2 id="intro-title">Rapatnya sudah selesai.<br><span>Pengetahuannya tetap ada.</span></h2>
+        <p>Telusuri keputusan, penanggung jawab, dan perkembangan acara.<br>Setiap hasil terhubung ke halaman notulen aslinya.</p>
+        <div class="stats" aria-label="Statistik arsip"><div><strong id="stat-docs">—</strong><span>dokumen rapat</span></div><div><strong id="stat-pages">—</strong><span>halaman arsip</span></div><div><strong id="stat-chunks">—</strong><span>potongan terindeks</span></div></div>
+      </section>
+      <div id="global-message" role="alert" hidden></div>
+      <section class="assistant" aria-label="Pencarian dan tanya jawab">
+        <div class="assistant-top"><h3><span aria-hidden="true">✳</span> Tanyakan pada arsip</h3><span id="mode-label">Memeriksa mode…</span></div>
+        <form id="ask-form">
+          <label class="sr-only" for="question">Pertanyaan tentang notulen</label>
+          <textarea id="question" rows="3" minlength="3" maxlength="2000" required placeholder="Misalnya, siapa penanggung jawab pembicara pada rapat ke-4?"></textarea>
+          <div class="form-bottom"><div class="filters"><label for="division" class="sr-only">Filter divisi</label><select id="division"><option value="">Semua divisi</option></select><label for="document-filter" class="sr-only">Filter dokumen</label><select id="document-filter"><option value="">Semua rapat</option></select></div><button id="ask-button" class="primary" type="submit">Telusuri arsip <span aria-hidden="true">↗</span></button></div>
+        </form>
+        <p class="form-hint">Enter untuk mengirim · Shift + Enter untuk baris baru · Jawaban mengikuti filter yang dipilih</p>
+      </section>
+      <section id="suggestions" aria-label="Contoh pertanyaan"><div class="section-label">MULAI DARI SEBUAH PERTANYAAN</div><div class="suggestion-grid">
+        <button type="button" data-question="Siapa penanggung jawab pembicara pada rapat ke-4?"><span>01 / PENANGGUNG JAWAB</span>Siapa yang mengurus pembicara?<b aria-hidden="true">↗</b></button>
+        <button type="button" data-question="Bandingkan perkembangan sponsorship pada semua rapat."><span>02 / PERKEMBANGAN</span>Bagaimana perkembangan sponsor?<b aria-hidden="true">↗</b></button>
+        <button type="button" data-question="Apa kendala divisi ATP pada rapat ke-2?"><span>03 / TINDAK LANJUT</span>Apa kendala divisi ATP?<b aria-hidden="true">↗</b></button>
+        <button type="button" data-question="Apa saja vendor yang ditetapkan pada rapat ke-2?"><span>04 / KEPUTUSAN</span>Vendor apa saja yang dipilih?<b aria-hidden="true">↗</b></button>
+      </div></section>
+      <section id="answer-section" hidden aria-labelledby="answer-title" aria-live="polite">
+        <div class="answer-heading"><h3 id="answer-title">Hasil penelusuran</h3><button id="reset-chat" type="button">Percakapan baru</button></div>
+        <p id="answer-question"></p><p id="answer-meta" class="subtle"></p>
+        <div id="answer-warning" class="notice" hidden></div>
+        <div class="answer-layout"><article id="answer-text"></article><aside class="sources-panel"><h4>Sumber dalam arsip <span id="source-count"></span></h4><div id="sources"></div></aside></div>
+      </section>
+      <footer>CampusOrg <span>·</span> Soedirman Technophoria <span>·</span> Periksa sumber sebelum mengambil keputusan.</footer>
+    </div>
+  </main>
+</body>
+</html>
