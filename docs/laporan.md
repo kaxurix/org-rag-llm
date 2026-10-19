@@ -58,7 +58,7 @@ Bagi pengurus organisasi, manfaat yang dituju adalah lebih mudahnya menemukan ke
 
 Korpus evaluasi berisi empat PDF notulen S-TECH 2026 yang memiliki teks yang dapat diekstraksi. Pencarian utama menggunakan BM25 pada SQLite FTS5. Gemini `gemini-3.5-flash-lite` digunakan untuk generasi online, sementara Ollama tersedia sebagai alternatif lokal. Tidak dilakukan pelatihan ulang atau *fine-tuning* model.
 
-Sampai pertemuan ke-7, aplikasi dan pengujian fungsi dasar sudah tersedia. Pencarian vektor masih berupa opsi yang belum menjadi konfigurasi evaluasi utama. OCR, graf pengetahuan, evaluasi RAGAS, pengujian banyak pengguna, dan penilaian kualitas jawaban oleh pengguna belum dilaksanakan. Hasil yang disajikan pada laporan ini karena itu diperlakukan sebagai hasil awal pengembangan.
+Sampai pertemuan ke-7, layanan API dan pengujian fungsi dasar sudah tersedia. Pencarian vektor masih berupa opsi yang belum menjadi konfigurasi evaluasi utama. Antarmuka pengguna grafis, OCR, graf pengetahuan, evaluasi RAGAS, pengujian banyak pengguna, dan penilaian kualitas jawaban oleh pengguna belum dilaksanakan. Hasil yang disajikan pada laporan ini karena itu diperlakukan sebagai hasil awal pengembangan.
 
 ## 2. Related Work
 
@@ -88,7 +88,7 @@ Langkah yang sudah tersedia adalah meminta rujukan per paragraf, memvalidasi ID 
 
 ### 2.5 Evaluasi dan Kemungkinan Pengembangan Graf
 
-Chang dkk. [18] dan Knollmeyer dkk. [20] menekankan perlunya dimensi evaluasi yang jelas. Pada tahap ini, CampusOrg baru memeriksa perilaku kode, hasil retrieval berdasarkan kasus, alur browser, dan satu respons model langsung. Penilaian atas kelengkapan serta ketepatan setiap klaim masih menjadi pekerjaan berikutnya.
+Chang dkk. [18] dan Knollmeyer dkk. [20] menekankan perlunya dimensi evaluasi yang jelas. Pada tahap ini, CampusOrg baru memeriksa perilaku kode pada tingkat endpoint API, hasil retrieval berdasarkan kasus, dan satu respons model langsung. Penilaian atas kelengkapan serta ketepatan setiap klaim masih menjadi pekerjaan berikutnya.
 
 Pan dkk. [19] memberi dasar untuk mempertimbangkan integrasi graf apabila kemudian ditemukan pertanyaan relasional yang tidak tertangani. Namun, penambahan graf perlu disertai kebutuhan dan ukuran keberhasilan yang nyata. Membandingkan prototipe sekarang dengan pendekatan graf belum dapat dilakukan karena komponen graf belum tersedia.
 
@@ -122,7 +122,6 @@ Metode yang digunakan adalah pengembangan prototipe perangkat lunak dengan studi
 | Impor PDF, SQLite, dan indeks teks | Sudah diimplementasikan. |
 | Retrieval, filter, dan referensi halaman | Sudah diimplementasikan dan diuji pada kasus yang ditetapkan. |
 | Integrasi Gemini dan alternatif Ollama | Sudah tersedia; Gemini telah diuji langsung. |
-| Antarmuka dan pemeriksaan browser | Sudah tersedia dan diuji pada skenario terbatas. |
 | Evaluasi kualitas jawaban oleh penilai | Belum dilakukan secara menyeluruh. |
 | Perbandingan metode dan uji pengguna | Belum dilakukan. |
 
@@ -150,16 +149,15 @@ Evaluasi pencarian memakai database sementara berisi empat PDF tersebut. Databas
 
 ### 3.3 Arsitektur dan Penyimpanan
 
-Backend menggunakan Python, FastAPI, dan Uvicorn. PyMuPDF digunakan untuk membaca PDF, SQLite FTS5 untuk pengindeksan teks, Pydantic untuk validasi, dan HTTPX untuk komunikasi dengan model. Antarmuka dibuat menggunakan HTML, CSS, dan JavaScript.
+Backend menggunakan Python, FastAPI, dan Uvicorn. PyMuPDF digunakan untuk membaca PDF, SQLite FTS5 untuk pengindeksan teks, Pydantic untuk validasi skema request/response, dan HTTPX untuk komunikasi dengan model bahasa. Akses sistem dilakukan melalui endpoint REST API.
 
 ```mermaid
 flowchart LR
-    U[Pengguna] --> W[Antarmuka web]
-    W --> A[FastAPI]
+    C[Klien API] --> A[FastAPI Endpoints]
     P[PDF dataset atau unggahan] --> I[Validasi dan ekstraksi]
     A --> I
-    I --> C[Potongan dan metadata]
-    C --> D[(SQLite dan FTS5)]
+    I --> CH[Potongan dan metadata]
+    CH --> D[(SQLite dan FTS5)]
     A --> R[Pencarian dan filter]
     D --> R
     R --> B[Bukti terpilih]
@@ -168,10 +166,10 @@ flowchart LR
     B --> K[Jawaban langsung atau kutipan]
     V --> A
     K --> A
-    A --> W
+    A --> C
 ```
 
-**Gambar 1. Arsitektur prototipe CampusOrg.**
+**Gambar 1. Arsitektur prototipe backend CampusOrg.**
 
 Tabel `documents` menyimpan PDF, checksum, dan metadata dokumen. Tabel `chunks` menyimpan potongan teks, halaman, divisi, nomor rapat, serta tanggal rapat. Satu dokumen memiliki banyak potongan, sedangkan tabel virtual `chunks_fts` menjadi indeks pencarian. Embedding opsional disimpan pada potongan bersama nama model pembentuknya.
 
@@ -216,21 +214,20 @@ Batas waktu Gemini secara bawaan adalah 40 detik. Ketika kuota habis, model terl
 
 ### 3.7 Rancangan Pengujian
 
-Pengujian dipisahkan menjadi tes perangkat lunak, evaluasi retrieval, pemeriksaan browser, dan uji generasi langsung. Pemisahan ini mengikuti kebutuhan untuk menjelaskan apa yang sebenarnya diukur pada tiap hasil, sebagaimana dibahas dalam literatur evaluasi [18], [20].
+Pengujian dipisahkan menjadi tes perangkat lunak, evaluasi retrieval, dan uji generasi langsung. Pemisahan ini mengikuti kebutuhan untuk menjelaskan apa yang sebenarnya diukur pada tiap hasil, sebagaimana dibahas dalam literatur evaluasi [18], [20].
 
 Tes otomatis memakai database sementara dan respons HTTP simulasi untuk gangguan model. Evaluator retrieval mengimpor empat PDF, kemudian menjalankan 20 kasus BM25 dengan `top_k=8`. Lima belas kasus mengharapkan bukti tertentu, sedangkan lima kasus mengharapkan hasil kosong. Syarat dapat mencakup kemunculan teks bukti, keterwakilan rapat, atau batas divisi/rapat. Daftar kasus tersimpan pada [eval_cases.json](../eval_cases.json).
 
-Browser smoke test memeriksa statistik, pengiriman pertanyaan, kutipan, tautan PDF, respons tanpa bukti, dan overflow horizontal pada ukuran ponsel. Uji generasi langsung dilakukan terpisah karena tes browser dapat dijawab melalui `source_match` tanpa Gemini.
+Uji generasi langsung dilakukan melalui pemanggilan endpoint API `/api/ask` dengan model Gemini nyata.
 
 Perintah berikut dapat digunakan untuk mengulang pemeriksaan dasar dari root proyek:
 
 ```powershell
 .\venv\Scripts\python.exe -m unittest discover -s tests -v
 .\venv\Scripts\python.exe evaluate.py
-node tests/browser-smoke.mjs
 ```
 
-Tes browser memerlukan server yang sudah berjalan, Node.js 22+, dan Chromium lokal. Evaluasi jawaban generatif oleh penilai, perbandingan metode, pengujian beban, dan pengukuran latensi berulang belum dilakukan.
+Evaluasi jawaban generatif oleh penilai, perbandingan metode, pengujian beban, dan pengukuran latensi berulang belum dilakukan.
 
 ### 3.8 Pengelolaan Data dan Privasi
 
@@ -242,7 +239,7 @@ Dengan demikian, pemakaian Gemini perlu mempertimbangkan izin penggunaan notulen
 
 ### 4.1 Capaian Awal sampai Pertemuan ke-7
 
-Sampai tahap ini, impor PDF, penyimpanan, pencarian, penyajian sumber, dan antarmuka telah tersambung dalam prototipe. Gemini dapat dipanggil untuk membentuk jawaban, sementara kutipan tetap tersedia ketika generasi tidak digunakan atau gagal.
+Sampai tahap ini, impor PDF, penyimpanan, pencarian, dan penyajian sumber telah tersambung dalam layanan backend. Gemini dapat dipanggil melalui API untuk membentuk jawaban, sementara kutipan tetap tersedia ketika generasi tidak digunakan atau gagal.
 
 **Tabel 5. Ringkasan verifikasi awal pada 19 Oktober 2026.**
 
@@ -250,8 +247,7 @@ Sampai tahap ini, impor PDF, penyimpanan, pencarian, penyajian sumber, dan antar
 | --- | --- | --- |
 | Tes otomatis | 72 tes lulus. | Perilaku yang diperiksa sesuai harapan tes. |
 | Evaluasi retrieval | 20 dari 20 kasus lulus. | Bukti dan filter memenuhi syarat kasus yang ditetapkan. |
-| Browser smoke test | Lulus pada skenario yang diperiksa. | Alur UI utama berjalan pada ukuran layar uji. |
-| Satu uji Gemini langsung | Berhasil tanpa fallback. | Jalur generasi online dapat dipanggil dan dirender. |
+| Satu uji Gemini langsung | Berhasil tanpa fallback. | Jalur generasi online dapat dipanggil dan mengembalikan respons valid. |
 
 Tabel ini belum menunjukkan keberhasilan penggunaan di organisasi sehari-hari. Pengurus belum dilibatkan dalam penilaian manfaat dan kepuasan, sementara variasi dokumen maupun pertanyaan masih terbatas.
 
@@ -284,23 +280,9 @@ Jawaban merangkum persiapan sponsor pada Mei, penyebaran proposal pada Juli, ser
 
 Durasi sekitar 5,3 detik berasal dari satu pengamatan, bukan rata-rata atau jaminan waktu respons. Belum ada percobaan berulang untuk mengukur variasi jaringan dan model, serta belum ada pembandingan Gemini dan Ollama dengan pertanyaan serta korpus yang sama.
 
-### 4.4 Antarmuka dan Pemeriksaan Sumber
+### 4.4 Struktur Respons dan Pemeriksaan Sumber
 
-Antarmuka menampilkan daftar dokumen, statistik, filter, kolom pertanyaan, serta panel sumber. Kutipan dapat dibuka dan tautan PDF mengarah ke halaman terkait. Pada pertanyaan peran yang eksplisit, pengguna dapat melihat label jawaban langsung dari arsip sehingga respons tersebut dapat dibedakan dari generasi model.
-
-![Halaman utama CampusOrg pada desktop](assets/laporan/tampilan-desktop.png)
-
-**Gambar 2. Tampilan desktop prototipe pada saat verifikasi.**
-
-![Jawaban langsung dan panel sumber](assets/laporan/jawaban-dan-sumber.png)
-
-**Gambar 3. Jawaban peran beserta kutipan. Respons pada gambar menggunakan `source_match`, bukan generasi Gemini.**
-
-![Tampilan CampusOrg pada layar ponsel](assets/laporan/tampilan-ponsel.png)
-
-**Gambar 4. Susunan komponen pada ponsel.**
-
-Statistik enam dokumen pada gambar menggambarkan database aktif yang juga memuat versi PDF gabungan. Evaluasi 20 kasus tetap memakai empat PDF bersih. Pemeriksaan ponsel hanya dilakukan pada ukuran yang ditetapkan dalam tes, sehingga belum menggantikan pengujian kegunaan pada berbagai perangkat.
+Layanan backend mengembalikan payload JSON terstruktur yang memuat teks jawaban, kutipan potongan teks, nomor halaman, tanggal rapat, serta tautan berkas sumber. Pada pertanyaan peran yang eksplisit, endpoint mengembalikan label jawaban langsung dari arsip (`source_match`) sehingga respons tersebut dapat dibedakan dari generasi model. Format terstruktur ini memungkinkan klien apa pun di masa depan membedakan klaim ringkasan dari bukti aslinya.
 
 ### 4.5 Pembahasan dan Pekerjaan Berikutnya
 
@@ -316,11 +298,11 @@ Prioritas setelah pertemuan ke-7 adalah memperluas pertanyaan uji, melibatkan pe
 
 ### Kesimpulan Sementara
 
-Sampai pertemuan ke-7, CampusOrg telah memiliki prototipe yang mengolah PDF notulen, menyimpan metadata rapat, mencari bukti melalui SQLite FTS5/BM25, dan menampilkan jawaban bersama sumber. Gemini digunakan untuk generasi online, sedangkan jawaban langsung serta kutipan menyediakan jalur lain sesuai kondisi. Implementasi yang tersedia adalah RAG berbasis dokumen dan metadata; graf pengetahuan belum dibangun.
+Sampai pertemuan ke-7, CampusOrg telah memiliki prototipe backend yang mengolah PDF notulen, menyimpan metadata rapat, mencari bukti melalui SQLite FTS5/BM25, dan menyajikan jawaban bersama sumber melalui REST API. Gemini digunakan untuk generasi online, sedangkan jawaban langsung serta kutipan menyediakan jalur fallback sesuai kondisi. Implementasi yang tersedia adalah RAG berbasis dokumen dan metadata; graf pengetahuan dan antarmuka visual belum dibangun.
 
-Verifikasi awal menghasilkan 72 tes otomatis lulus, 20 kasus retrieval memenuhi syarat evaluator, dan browser smoke test berhasil pada skenario yang diperiksa. Satu uji Gemini juga menghasilkan jawaban tanpa fallback dalam sekitar 5,3 detik waktu server. Hasil tersebut mendukung kesimpulan bahwa alur utama prototipe sudah berjalan pada lingkup pengujian saat ini.
+Verifikasi awal menghasilkan 72 tes otomatis lulus dan 20 kasus retrieval memenuhi syarat evaluator. Satu uji Gemini juga menghasilkan jawaban tanpa fallback dalam sekitar 5,3 detik waktu server. Hasil tersebut mendukung kesimpulan bahwa alur fungsional backend prototipe sudah berjalan pada lingkup pengujian saat ini.
 
-Efektivitas pada penggunaan organisasi dan kualitas jawaban secara menyeluruh belum dapat disimpulkan. Rangkuman yang belum mencakup seluruh rapat menunjukkan perlunya evaluasi generatif lebih lanjut. Pekerjaan berikutnya diarahkan pada pertanyaan uji yang lebih beragam, penilaian independen, dan pengukuran yang konsisten sebelum melakukan perbandingan metode atau penerapan yang lebih luas.
+Efektivitas pada penggunaan organisasi dan kualitas jawaban secara menyeluruh belum dapat disimpulkan. Rangkuman yang belum mencakup seluruh rapat menunjukkan perlunya evaluasi generatif lebih lanjut. Pekerjaan berikutnya diarahkan pada pertanyaan uji yang lebih beragam, penilaian independen, dan pengukuran yang konsisten sebelum melakukan perbandingan metode, pembangunan antarmuka pengguna, atau penerapan yang lebih luas.
 
 ## 6. Daftar Pustaka
 
